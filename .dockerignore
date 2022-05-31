@@ -1,0 +1,10 @@
+WebApi/bin/
+WebApi/obj/
+Common/bin/
+Common/obj/
+
+Dockerfile
+build.sh
+.git
+.gitignore
+.idea

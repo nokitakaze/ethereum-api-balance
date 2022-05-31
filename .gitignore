@@ -1,0 +1,6 @@
+bin/
+obj/
+
+/.idea
+/WebApi/appsettings.*.json
+/*.DotSettings.user
