@@ -2,9 +2,13 @@ WebApi/bin/
 WebApi/obj/
 Common/bin/
 Common/obj/
+docs/
 
 Dockerfile
 build.sh
 .git
 .gitignore
 .idea
+
+LICENSE
+README.md
