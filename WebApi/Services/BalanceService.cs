@@ -8,6 +8,9 @@ using NokitaKaze.EthereumChainConfig;
 
 namespace EthereumAPIBalance.WebApi.Services;
 
+/// <summary>
+/// Main singleton service for the entire program
+/// </summary>
 public class BalanceService
 {
     private protected readonly ILogger<BalanceService> Logger;
@@ -15,6 +18,10 @@ public class BalanceService
 
     private protected readonly string DefaultAccountPrivateKey;
 
+    /// <summary>
+    /// </summary>
+    /// <param name="logger"></param>
+    /// <param name="ethereumChainConfigService"></param>
     public BalanceService(
         ILogger<BalanceService> logger,
         EthereumChainConfigService ethereumChainConfigService
@@ -31,6 +38,11 @@ public class BalanceService
         }
     }
 
+    /// <summary>
+    /// Get RPC urls for requested chain
+    /// </summary>
+    /// <param name="chainId"></param>
+    /// <returns></returns>
     public ICollection<string> GetRPCUrls(int chainId)
     {
         return EthereumChainConfigService.GetChainConfig(chainId).GetRPCUrls();
@@ -60,8 +72,6 @@ public class BalanceService
         public string name = string.Empty;
         public string symbol = string.Empty;
         public int decimals;
-        public long decimLong;
-        public decimal decimLongR;
     }
 
     private protected Nethereum.Web3.Accounts.Account GetDefaultAccount(int chainId)
@@ -97,11 +107,6 @@ public class BalanceService
                     return null;
                 }
 
-                var decimLong = Enumerable
-                    .Repeat(0, decimals)
-                    .Aggregate(1L, (a, _) => a * 10);
-                var decimLongR = 1m / decimLong;
-
                 var name = await contract
                     .GetFunction("name")
                     .CallAsync<string>();
@@ -114,8 +119,6 @@ public class BalanceService
                     name = name,
                     symbol = symbol,
                     decimals = decimals,
-                    decimLong = decimLong,
-                    decimLongR = decimLongR,
                 };
 
                 TokenInfos[key] = response;
@@ -188,10 +191,11 @@ public class BalanceService
         }
         else
         {
-            // Ethereum itself
+            // Main coin (i.e. Ethereum) itself
             var response = await web3.Eth.GetBalance.SendRequestAsync(address);
             var balanceWei = response.Value;
 
+            // TODO check if main coin could has any other precision
             balance = FormatBalanceItem(balanceWei, 18);
             info = new Common.TokenInfo
             {
@@ -247,6 +251,12 @@ public class BalanceService
         throw lastException!;
     }
 
+    /// <summary>
+    /// Format balance item
+    /// </summary>
+    /// <param name="balanceWei">Balance in wei</param>
+    /// <param name="decimals">Precision size</param>
+    /// <returns></returns>
     public static Models.APIBalanceItem FormatBalanceItem(BigInteger balanceWei, int decimals)
     {
         if (balanceWei.IsZero)
@@ -276,6 +286,14 @@ public class BalanceService
         return fullItem;
     }
 
+    /// <summary>
+    /// Get balance
+    /// </summary>
+    /// <param name="address"></param>
+    /// <param name="token"></param>
+    /// <param name="chainId"></param>
+    /// <returns></returns>
+    /// <exception cref="APIException"></exception>
     public async Task<Models.APIBalanceResponse> GetBalance(
         string address,
         string? token,
@@ -289,7 +307,7 @@ public class BalanceService
         }
 
         Logger.LogInformation(
-            "Get value for address {address}. Token: {token}. Chain Id: {chainId}",
+            "Get value for address {Address}. Token: {Token}. Chain Id: {ChainId}",
             address, token, chainId
         );
 
@@ -299,7 +317,7 @@ public class BalanceService
             {
                 var response = await GetBalanceWithUrlAndRetries(address, token, chainId, url);
                 Logger.LogInformation(
-                    "Get value for address {address}. Token: {token}. Chain Id: {chainId} = {balance} ({weiBalance})",
+                    "Get value for address {Address}. Token: {Token}. Chain Id: {ChainId} = {Balance} ({WeiBalance})",
                     address,
                     token,
                     chainId,
@@ -312,20 +330,20 @@ public class BalanceService
             catch (APIException e)
             {
                 Logger.LogInformation(
-                    "Can not obtain information from {url} for address {address}. Exception: {exception}",
-                    url, address, e
+                    "Can not obtain information from {Url} for address {Address}. Exception: {Exception}",
+                    url, address, e.ToString()
                 );
             }
             catch (RpcClientUnknownException e)
             {
                 Logger.LogInformation(
-                    "RpcClientUnknownException. Can not obtain information from {url} for address {address}. Exception: {exception}",
-                    url, address, e
+                    "RpcClientUnknownException. Can not obtain information from {Url} for address {Address}. Exception: {Exception}",
+                    url, address, e.ToString()
                 );
             }
         }
 
-        throw new APIException();
+        throw new APIException("Can't obtain information from any RPC urls");
     }
 
     #endregion
@@ -386,10 +404,17 @@ public class BalanceService
         throw lastException!;
     }
 
+    /// <summary>
+    /// Get next nonce id for address in requested chain
+    /// </summary>
+    /// <param name="address"></param>
+    /// <param name="chainId"></param>
+    /// <returns></returns>
+    /// <exception cref="APIException"></exception>
     public async Task<APINonceResponse> GetNextNonce(string address, int chainId = 1)
     {
         Logger.LogInformation(
-            "Get sent transaction count for address {address}. Chain Id: {chainId}",
+            "Get sent transaction count for address {Address}. Chain Id: {ChainId}",
             address, chainId
         );
         var urls = GetRPCUrls(chainId);
@@ -400,7 +425,7 @@ public class BalanceService
             {
                 var response = await GetNextNonceWithUrlAndRetries(address, chainId, url);
                 Logger.LogInformation(
-                    "Get sent transaction count for address {address}. Chain Id: {chainId}",
+                    "Get sent transaction count for address {Address}. Chain Id: {ChainId}",
                     address, chainId
                 );
 
@@ -409,20 +434,20 @@ public class BalanceService
             catch (APIException e)
             {
                 Logger.LogInformation(
-                    "Can not obtain information from {url} for address {address}. Exception: {exception}",
-                    url, address, e
+                    "Can not obtain information from {Url} for address {Address}. Exception: {Exception}",
+                    url, address, e.ToString()
                 );
             }
             catch (RpcClientUnknownException e)
             {
                 Logger.LogInformation(
-                    "RpcClientUnknownException. Can not obtain information from {url} for address {address}. Exception: {exception}",
-                    url, address, e
+                    "RpcClientUnknownException. Can not obtain information from {Url} for address {Address}. Exception: {Exception}",
+                    url, address, e.ToString()
                 );
             }
         }
 
-        throw new APIException();
+        throw new APIException("Can't obtain information from any RPC urls");
     }
 
     #endregion
