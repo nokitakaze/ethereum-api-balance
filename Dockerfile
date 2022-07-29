@@ -1,9 +1,13 @@
 # https://docs.microsoft.com/en-us/aspnet/core/host-and-deploy/docker/building-net-docker-images?view=aspnetcore-6.0
 FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
+
+LABEL maintainer="Nokita Kaze <admin@kanaria.ru>"
+
 WORKDIR /source
 
 # copy csproj and restore as distinct layers
 COPY *.sln .
+COPY global.json .
 COPY WebApi/*.csproj ./WebApi/
 COPY Common/*.csproj ./Common/
 RUN dotnet restore
