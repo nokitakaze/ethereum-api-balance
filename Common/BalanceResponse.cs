@@ -3,7 +3,7 @@
 namespace EthereumAPIBalance.Common;
 
 /// <summary>
-/// Main response object to balance request
+/// Main response object for balance request
 /// </summary>
 [SuppressMessage("ReSharper", "InconsistentNaming")]
 [SuppressMessage("ReSharper", "UnusedMember.Global")]

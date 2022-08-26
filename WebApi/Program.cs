@@ -23,6 +23,7 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 builder.Services.AddSingleton<BalanceService>();
+builder.Services.AddSingleton<FeeService>();
 builder.Services.AddSingleton(_ => EthereumChainConfigService.CreateConfigFromDefaultFile());
 
 var app = builder.Build();
