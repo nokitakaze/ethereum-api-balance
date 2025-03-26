@@ -4,3 +4,4 @@ obj/
 /.idea
 /WebApi/appsettings.*.json
 /*.DotSettings.user
+/custom-ethereum-config.json

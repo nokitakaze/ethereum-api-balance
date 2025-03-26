@@ -22,9 +22,28 @@ builder.Services.AddSwaggerGen(options =>
     }
 });
 
+string? EVMConfigFilename;
+{
+    var folders = new string?[] { null, AppContext.BaseDirectory };
+    EVMConfigFilename = new string[] { "custom-ethereum-config.json", "default-ethereum-config.json" }
+        .SelectMany(pureFilename => folders
+            .Select(folder => !string.IsNullOrEmpty(folder) ? Path.Combine(folder, pureFilename) : pureFilename))
+        .FirstOrDefault(File.Exists);
+    if (!string.IsNullOrEmpty(EVMConfigFilename))
+    {
+        Console.WriteLine("EVM config file: {0}", EVMConfigFilename);
+    }
+}
+
 builder.Services.AddSingleton<BalanceService>();
 builder.Services.AddSingleton<FeeService>();
-builder.Services.AddSingleton(_ => EthereumChainConfigService.CreateConfigFromDefaultFile());
+builder.Services.AddSingleton(_ =>
+{
+    // ReSharper disable once ConvertToLambdaExpression
+    return !string.IsNullOrEmpty(EVMConfigFilename)
+        ? EthereumChainConfigService.CreateConfigFromFile(EVMConfigFilename)
+        : EthereumChainConfigService.CreateConfigFromDefaultFile();
+});
 
 var app = builder.Build();
 

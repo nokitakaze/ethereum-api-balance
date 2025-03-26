@@ -87,9 +87,9 @@ public class BalanceService
             var abiText = await GetERC20ABI();
             var key = (chainId, tokenAddress);
 
-            if (TokenInfos.ContainsKey(key))
+            if (TokenInfos.TryGetValue(key, out var tokenInfo))
             {
-                return TokenInfos[key];
+                return tokenInfo;
             }
 
             var urls = GetRPCUrls(chainId);
